@@ -62,7 +62,7 @@ export default function Campana() {
             <section key={esp} data-testid={`seccion-${esp}`}>
               <div className="antetitulo mb-1">{ETIQUETA_ESPECIALISTA[esp].toUpperCase()}</div>
               <h2 className="font-sora text-[26px] font-bold mb-5">{res.contenido.titulo_corto}</h2>
-              <Resultado especialista={esp} data={res.contenido} />
+              <Resultado especialista={esp} data={res.contenido} resultadoId={res.id} />
               <Fuentes fuentes={res.fuentes_usadas} />
             </section>
           );

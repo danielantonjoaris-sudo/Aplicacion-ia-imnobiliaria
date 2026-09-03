@@ -284,7 +284,7 @@ export default function Asistente() {
               </div>
 
               <div className="flex-1 overflow-hidden" data-testid="resultado-contenido">
-                <Resultado especialista={especialista} data={resultActual.contenido} compact />
+                <Resultado especialista={especialista} data={resultActual.contenido} resultadoId={resultActual.id} compact />
               </div>
 
               <Fuentes fuentes={resultActual.fuentes_usadas} />
@@ -319,7 +319,7 @@ export default function Asistente() {
         titulo={cabeceraResultado()}
         testid="modal-ver-completo"
       >
-        {resultActual && <Resultado especialista={especialista} data={resultActual.contenido} />}
+        {resultActual && <Resultado especialista={especialista} data={resultActual.contenido} resultadoId={resultActual.id} />}
         {resultActual && <Fuentes fuentes={resultActual.fuentes_usadas} />}
       </Modal>
     </div>

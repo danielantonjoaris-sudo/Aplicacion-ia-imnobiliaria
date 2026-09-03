@@ -139,7 +139,73 @@ export function Anuncios({ data, compact }) {
   );
 }
 
-export function LandingPreview({ data, compact }) {
+// La landing no se dibuja aquí: el backend la genera como HTML completo con la
+// marca de la agencia, y aquí se enseña de verdad, con lo que hace falta para
+// llevársela. Ver una maqueta aproximada no sirve: hay que ver la página.
+export function LandingPreview({ data, resultadoId, compact }) {
+  const [copiado, setCopiado] = React.useState(false);
+  const base = `${process.env.REACT_APP_BACKEND_URL}/api/resultados/${resultadoId}`;
+
+  const copiar = async () => {
+    try {
+      const res = await fetch(`${base}/landing.html`);
+      await navigator.clipboard.writeText(await res.text());
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    } catch {
+      setCopiado(false);
+    }
+  };
+
+  // Sin id no se puede pedir el HTML: se cae a la maqueta antigua.
+  if (!resultadoId) return <LandingMaqueta data={data} compact={compact} />;
+
+  return (
+    <div data-testid="landing-preview">
+      <div className="flex flex-wrap gap-2 mb-3">
+        <a
+          href={`${base}/landing/descargar`}
+          className="rounded-[8px] px-4 py-2.5 text-[14px] font-semibold text-white"
+          style={{ background: "var(--azul)" }}
+          data-testid="landing-descargar"
+        >
+          Descargar la página
+        </a>
+        <a
+          href={`${base}/landing.html`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-[8px] border px-4 py-2.5 text-[14px] font-semibold"
+          style={{ borderColor: "var(--borde)" }}
+        >
+          Abrir en pestaña nueva
+        </a>
+        <button
+          type="button"
+          onClick={copiar}
+          className="rounded-[8px] border px-4 py-2.5 text-[14px] font-semibold"
+          style={{ borderColor: "var(--borde)" }}
+        >
+          {copiado ? "Copiado" : "Copiar el HTML"}
+        </button>
+      </div>
+      <p className="text-[13px] mb-3" style={{ color: "var(--texto-2)" }}>
+        Vista previa real, con la marca de tu agencia. Es un solo archivo: se abre con doble
+        clic y funciona. Rellena el bloque LANDING_CONFIG antes de publicarla.
+      </p>
+      <div className="rounded-[12px] border overflow-hidden" style={{ borderColor: "var(--borde)" }}>
+        <iframe
+          src={`${base}/landing.html`}
+          title="Vista previa de la landing"
+          className="w-full block"
+          style={{ height: compact ? "420px" : "70vh", border: 0 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LandingMaqueta({ data, compact }) {
   const beneficios = data.beneficios || [];
   const campos = data.campos_formulario || [];
   const t = data.testimonio || {};
@@ -211,11 +277,12 @@ export function LandingPreview({ data, compact }) {
   );
 }
 
-export function Resultado({ especialista, data, compact }) {
+export function Resultado({ especialista, data, resultadoId, compact }) {
   if (!data) return null;
   if (especialista === "cliente_ideal") return <ClienteIdeal data={data} compact={compact} />;
   if (especialista === "oferta") return <Oferta data={data} compact={compact} />;
   if (especialista === "anuncios") return <Anuncios data={data} compact={compact} />;
-  if (especialista === "landing") return <LandingPreview data={data} compact={compact} />;
+  if (especialista === "landing")
+    return <LandingPreview data={data} resultadoId={resultadoId} compact={compact} />;
   return null;
 }

@@ -2,12 +2,14 @@
 import logging
 
 from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
 
 from db import db, ahora, oid, limpiar
 from specialists import ejecutar_especialista
 from seed_data import PROMPTS, FRAGMENTOS
+from render_landing import render_landing, normalizar_marca
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -24,6 +26,13 @@ class AgenciaIn(BaseModel):
     nombre_agencia: str
     zona: str
     tamano_equipo: str
+    # La landing se dibuja con la marca de la agencia, no con la de InmoMatic.
+    # {"colores": {...}, "tipografia": {...}, "estilo": "...", "logo": "..."}
+    marca: dict | None = None
+
+
+class MarcaIn(BaseModel):
+    marca: dict
 
 
 class CampanaIn(BaseModel):
@@ -61,9 +70,20 @@ async def listar_agencias():
 @api.post("/agencias")
 async def crear_agencia(datos: AgenciaIn):
     doc = datos.model_dump()
+    doc["marca"] = normalizar_marca(doc.get("marca"))
     doc["creado_en"] = ahora()
     res = await db.agencias.insert_one(doc)
     return limpiar(await db.agencias.find_one({"_id": res.inserted_id}))
+
+
+@api.put("/agencias/{agencia_id}/marca")
+async def guardar_marca(agencia_id: str, datos: MarcaIn):
+    """Guarda la marca de la agencia ya normalizada: hex válidos y contraste mínimo."""
+    marca = normalizar_marca(datos.marca)
+    resultado = await db.agencias.update_one({"_id": oid(agencia_id)}, {"$set": {"marca": marca}})
+    if resultado.matched_count == 0:
+        raise HTTPException(404, "Agencia no encontrada")
+    return {"marca": marca}
 
 
 # ------------------- Campañas -------------------
@@ -171,6 +191,50 @@ async def correr_especialista(especialista: str, campana_id: str, datos: Especia
     }
     res = await db.resultados.insert_one(doc)
     return limpiar(await db.resultados.find_one({"_id": res.inserted_id}))
+
+
+# ------------------- Landing: HTML de verdad -------------------
+async def _html_de_landing(resultado_id: str) -> tuple[str, str]:
+    """Devuelve (html, nombre_de_archivo) de un resultado del especialista de landing."""
+    resultado = await db.resultados.find_one({"_id": oid(resultado_id)})
+    if not resultado:
+        raise HTTPException(404, "Resultado no encontrado")
+    if resultado["especialista"] != "landing":
+        raise HTTPException(400, "Este resultado no es una landing")
+
+    campana = await db.campanas.find_one({"_id": resultado["campana_id"]})
+    agencia = {}
+    if campana and campana.get("agencia_id"):
+        agencia = await db.agencias.find_one({"_id": campana["agencia_id"]}) or {}
+
+    datos = resultado["contenido"]
+    html = render_landing(
+        datos,
+        {"nombre": agencia.get("nombre_agencia", ""), "ciudad": agencia.get("zona", "")},
+        # La landing conserva la marca con la que se dibujó; si no tiene, la de
+        # la agencia; y si tampoco, una neutra. Nunca la de InmoMatic.
+        datos.get("marca") or agencia.get("marca"),
+    )
+    base = (resultado.get("titulo_corto") or "landing").lower()
+    nombre = "".join(c if c.isalnum() else "-" for c in base).strip("-") or "landing"
+    return html, f"landing-{nombre[:50]}.html"
+
+
+@api.get("/resultados/{resultado_id}/landing.html", response_class=HTMLResponse)
+async def landing_html(resultado_id: str):
+    """Vista previa real, para incrustar en un iframe."""
+    html, _ = await _html_de_landing(resultado_id)
+    return HTMLResponse(content=html)
+
+
+@api.get("/resultados/{resultado_id}/landing/descargar", response_class=HTMLResponse)
+async def landing_descargar(resultado_id: str):
+    """El mismo documento, como descarga."""
+    html, nombre = await _html_de_landing(resultado_id)
+    return HTMLResponse(
+        content=html,
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
 
 
 # ------------------- Aprobar resultado -------------------

@@ -65,17 +65,56 @@ ESQUEMAS = {
   ]  // EXACTAMENTE 5 objetos
 }""",
     },
+    # La landing NO se escribe como texto: se escribe como estructura, y el
+    # renderizador (render_landing.py) la dibuja con la marca de la agencia.
+    # Por eso el esquema va sección a sección y no admite HTML.
     "landing": {
-        "claves": ["titulo_corto", "titular", "subtitular", "beneficios",
-                   "testimonio", "campos_formulario", "llamada_a_la_accion"],
+        "claves": ["titulo_corto", "seo", "hero", "problema", "mecanismo",
+                   "incluye", "prueba", "objeciones", "cierre", "formulario"],
         "descripcion": """{
-  "titulo_corto": "string",
-  "titular": "string",
-  "subtitular": "string",
-  "beneficios": [{"titulo": "string", "texto": "string"}],  // 3 objetos
-  "testimonio": {"texto": "string", "autor": "string", "es_ejemplo": true/false},
-  "campos_formulario": ["string", "..."],
-  "llamada_a_la_accion": "string"
+  "titulo_corto": "string, máx 6 palabras",
+  "seo": {"titulo": "menos de 60 caracteres, con la promesa",
+          "descripcion": "menos de 155 caracteres"},
+  "hero": {
+    "entradilla": "una línea que cualifica: para quién es",
+    "titular": "la promesa, máximo 16 palabras. CONTINÚA el anuncio, no presenta a la agencia",
+    "subtitular": "una o dos frases: el cómo, y qué pasa al dejar los datos",
+    "boton": "acción y lo que recibe. NUNCA 'Enviar' ni 'Contactar' ni 'Más información'",
+    "nota": "una línea que quita miedo bajo el botón"
+  },
+  "problema": {
+    "titulo": "la situación en palabras del propietario",
+    "parrafos": ["2 o 3 párrafos cortos, SIN hablar todavía de la agencia"]
+  },
+  "mecanismo": {
+    "titulo": "el nombre del método de la agencia",
+    "intro": "una o dos frases",
+    "pasos": [{"titulo": "2 o 3 palabras", "texto": "qué tiene el propietario en la mano al terminar este paso"}]
+  },
+  "incluye": {
+    "titulo": "string",
+    "entregables": [{"nombre": "nombrado como resultado, no como tarea", "texto": "una frase"}],
+    "bonus": []
+  },
+  "prueba": {
+    "titulo": "string",
+    "texto": "SOLO lo que la agencia haya aportado. Si no hay nada, describe cómo trabaja sin inventar cifras",
+    "hueco_fotos": "qué fotos debería poner la agencia aquí, o cadena vacía",
+    "testimonio": {"texto": "solo si la agencia lo ha aportado, literal; si no, cadena vacía",
+                   "autor": "string", "es_ejemplo": true}
+  },
+  "garantia": {"titulo": "vacío si la oferta no tiene garantía", "texto": "string",
+               "condiciones": ["lo que el propietario tiene que cumplir"]},
+  "objeciones": [{"pregunta": "en palabras del propietario", "respuesta": "2 o 3 frases"}],
+  "cierre": {"titulo": "vuelve a la visión", "texto": "una o dos frases",
+             "boton": "MISMA etiqueta que el botón del hero"},
+  "formulario": {
+    "titulo": "string",
+    "pregunta_cualificacion": "la pregunta extra que cualifica",
+    "opciones_cualificacion": ["3 a 5 opciones"],
+    "boton": "MISMA etiqueta que el botón del hero",
+    "consentimiento": "texto corto y honesto"
+  }
 }""",
     },
 }
@@ -129,7 +168,11 @@ ANGULOS_ANUNCIOS = [
     "Nivel consciente del problema: sabe que algo no funciona (visitas sin ofertas, meses colgado) pero no sabe qué. Nombra el problema concreto y promete un diagnóstico.",
     "Nivel consciente de la solución: sabe que necesita una agencia pero duda de cuál. Compite con tu mecanismo propio y tu forma de trabajar.",
     "Nivel consciente de tu propuesta: ya sabe lo que ofreces, le falta el empujón. Oferta directa, garantía y urgencia real.",
-    "Ángulo de prueba social y autoridad de zona: apóyate en un resultado concreto de la zona (márcalo con [Supuesto] si te lo inventas) para generar confianza.",
+    # Este ángulo pedía inventarse un resultado y marcarlo con [Supuesto]. Un
+    # resultado de venta inventado en un anuncio inmobiliario es publicidad
+    # engañosa, y el marcador se borra o se publica: las dos salidas son malas.
+    # Ahora se deja un hueco que la agencia tiene que rellenar con lo suyo.
+    "Ángulo de prueba social y autoridad de zona: apóyate SOLO en resultados que la agencia haya aportado en sus respuestas. Si no ha aportado ninguno, NO te inventes ni cifras ni casos: escribe el anuncio dejando el hueco literal [RELLENA: un resultado real tuyo, por ejemplo 'vendido en X semanas en Y'] donde iría el dato, y construye el resto sobre la forma de trabajar.",
 ]
 
 _CLAVES_UN_ANUNCIO = ["angulo", "gancho", "cuerpo", "llamada_a_la_accion", "por_que_funciona"]
@@ -182,7 +225,15 @@ RESPUESTAS DEL AGENTE EN ESTE TRAMO
 
 {("RESULTADOS DE ESPECIALISTAS ANTERIORES" + chr(10) + bloque_previos + chr(10)) if bloque_previos else ""}
 FRAGMENTOS DEL MÉTODO (úsalos y cítalos, no los ignores)
-{_formatear_fragmentos(fragmentos)}"""
+{_formatear_fragmentos(fragmentos)}
+
+REGLA QUE NO SE SALTA NUNCA
+No inventes datos. Ni porcentajes de mercado, ni tiempos medios de venta, ni
+precios, ni casos de clientes, ni testimonios. Si necesitas un dato que la
+agencia no ha dado, escribe el hueco literal [RELLENA: qué dato falta] en su
+sitio. Un dato inventado dentro de un anuncio o una landing acaba publicado, y
+en publicidad inmobiliaria española eso es engañoso. Prefiere una frase más
+floja y verdadera a una cifra redonda y falsa."""
 
     fuentes = [{"titulo": f["titulo"], "fuente": f["fuente"]} for f in fragmentos]
     sesion = f"{especialista}-{agencia.get('nombre_agencia', 'x')}"
