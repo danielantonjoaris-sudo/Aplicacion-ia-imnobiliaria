@@ -8,6 +8,14 @@ function formatear(linea) {
     .replace(/>/g, "&gt;");
   s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   s = s.replace(/^\s*[-*•]\s+/, "• ");
+  // Los huecos que el agente deja marcados salen resaltados y no como texto
+  // plano dentro de la frase: es un dato que falta, no una frase terminada.
+  // El escapado ya se ha hecho arriba, así que aquí no entra HTML del modelo.
+  s = s.replace(
+    /\[(RELLENA|Supuesto|DATO PENDIENTE)([^\]]*)\]/gi,
+    (_, etiqueta, resto) =>
+      `<mark class="hueco" title="Dato que tienes que poner tú antes de publicar">${etiqueta}${resto}</mark>`
+  );
   return s;
 }
 

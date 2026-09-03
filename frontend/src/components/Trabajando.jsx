@@ -8,7 +8,7 @@ export function Trabajando({ especialista, zona }) {
     m.includes("la zona") && zona ? m.replace("la zona", zona) : m
   );
   const [idx, setIdx] = useState(0);
-  const [progreso, setProgreso] = useState(6);
+  const [segundos, setSegundos] = useState(0);
 
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % mensajes.length), 2500);
@@ -16,10 +16,12 @@ export function Trabajando({ especialista, zona }) {
     // eslint-disable-next-line
   }, [especialista]);
 
+  // Antes había una barra que subía sola hasta el 92% y se quedaba clavada:
+  // inventaba un progreso que nadie estaba midiendo. Si la llamada tardaba o
+  // fallaba, el usuario se quedaba mirando una barra que mentía. Ahora hay una
+  // barra indeterminada y un contador real de segundos.
   useEffect(() => {
-    const t = setInterval(() => {
-      setProgreso((p) => (p < 92 ? p + Math.max(1, Math.round((94 - p) / 12)) : p));
-    }, 700);
+    const t = setInterval(() => setSegundos((s) => s + 1), 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -37,14 +39,25 @@ export function Trabajando({ especialista, zona }) {
       >
         {mensajes[idx]}
       </p>
-      <div className="w-full h-[6px] rounded-full overflow-hidden" style={{ background: "var(--suave)" }}>
+      <div
+        className="w-full h-[6px] rounded-full overflow-hidden"
+        style={{ background: "var(--suave)" }}
+        role="progressbar"
+        aria-label="Generando el resultado"
+        aria-busy="true"
+      >
         <div
-          className="h-full rounded-full transition-all duration-700 ease-out"
-          style={{ width: `${progreso}%`, background: "var(--azul)" }}
+          className="h-full rounded-full"
+          style={{ width: "35%", background: "var(--azul)", animation: "barra-indeterminada 1.4s ease-in-out infinite" }}
         />
       </div>
-      <p className="mt-4 text-[14px]" style={{ color: "var(--texto-2)" }}>
-        Estamos consultando el método y redactando de verdad. Tarda unos segundos.
+      <p className="mt-4 text-[14px]" style={{ color: "var(--texto-2)" }} data-testid="trabajando-contador">
+        Estamos consultando el método y redactando de verdad.{" "}
+        {segundos < 15
+          ? "Tarda unos segundos."
+          : segundos < 45
+          ? `Llevamos ${segundos} segundos.`
+          : `Llevamos ${segundos} segundos. Las piezas largas tardan más.`}
       </p>
     </div>
   );

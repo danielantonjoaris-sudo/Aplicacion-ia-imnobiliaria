@@ -1,9 +1,54 @@
 import React from "react";
+import { Copy, Check as CheckIcon } from "lucide-react";
 import { RichText } from "../RichText";
 
 const Etiqueta = ({ children }) => (
   <div className="antetitulo mb-2">{children}</div>
 );
+
+/**
+ * Botón de copiar. Todo lo que produce esta aplicación existe para pegarse en
+ * otro sitio (Idealista, Meta, el CRM), y hasta ahora no había ni una sola
+ * forma de sacarlo salvo seleccionar a mano nueve pantallas de texto.
+ *
+ * Al copiar se limpian los huecos [RELLENA: ...]: se sustituyen por una línea
+ * en blanco, para que nadie publique un marcador por descuido.
+ */
+export function BotonCopiar({ texto, etiqueta = "Copiar", className = "" }) {
+  const [copiado, setCopiado] = React.useState(false);
+  const copiar = async () => {
+    try {
+      const limpio = String(texto || "").replace(/\[(?:RELLENA|Supuesto|DATO PENDIENTE)[^\]]*\]/gi, "________");
+      await navigator.clipboard.writeText(limpio.trim());
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1800);
+    } catch {
+      setCopiado(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={copiar}
+      className={`inline-flex items-center gap-1.5 rounded-[8px] border px-3 text-[13px] font-semibold transition-colors ${className}`}
+      style={{ borderColor: "var(--borde)", color: copiado ? "var(--verde)" : "var(--texto-2)", minHeight: 36 }}
+    >
+      {copiado ? <CheckIcon size={15} /> : <Copy size={15} />}
+      {copiado ? "Copiado" : etiqueta}
+    </button>
+  );
+}
+
+/** Cuenta los huecos que la agencia tiene que rellenar antes de publicar. */
+export function contarHuecos(obj) {
+  const texto = JSON.stringify(obj || {});
+  return (texto.match(/\[(?:RELLENA|Supuesto|DATO PENDIENTE)[^\]]*\]/gi) || []).length;
+}
+
+/** El texto de un anuncio, listo para pegar en el administrador de Meta. */
+function textoAnuncio(a) {
+  return [a.gancho, a.cuerpo, a.llamada_a_la_accion].filter(Boolean).join("\n\n");
+}
 
 const Lista = ({ items }) => (
   <ul className="space-y-1.5">
@@ -104,32 +149,54 @@ export function Oferta({ data, compact }) {
 
 export function Anuncios({ data, compact }) {
   const anuncios = data.anuncios || [];
+  // Los cinco anuncios son una secuencia (la escalera de consciencia). En dos
+  // columnas se leían 1|2 / 3|4 / 5, con el último huérfano y más de mil píxeles
+  // de zigzag entre uno y otro. En columna única el orden vuelve a ser el
+  // contenido.
   return (
-    <div className={compact ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-4"}>
+    <div className={compact ? "space-y-3" : "space-y-5"}>
       {anuncios.map((a, i) => (
-        <div key={i} className="rounded-[12px] border p-4 flex flex-col" style={{ borderColor: "var(--borde)" }}>
-          <span
-            className="self-start text-[12px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full mb-2"
-            style={{ background: "var(--acento)", color: "var(--azul)" }}
-          >
-            {a.angulo}
-          </span>
+        <div
+          key={i}
+          id={`anuncio-${i + 1}`}
+          className="rounded-[12px] border p-4 sm:p-5"
+          style={{ borderColor: "var(--borde)" }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span
+                className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold"
+                style={{ background: "var(--acento)", color: "var(--azul)" }}
+              >
+                {i + 1}
+              </span>
+              <span
+                className="text-[12px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                style={{ background: "var(--acento)", color: "var(--azul)" }}
+              >
+                {a.angulo}
+              </span>
+            </div>
+            {!compact && <BotonCopiar texto={textoAnuncio(a)} etiqueta="Copiar el anuncio" />}
+          </div>
           <div className="font-sora font-semibold text-[16px] leading-snug mb-2">{a.gancho}</div>
           {!compact && (
             <>
               <RichText text={a.cuerpo} className="text-[15px] mb-3" />
-              <div className="mt-auto">
-                <div className="text-[13px] font-bold" style={{ color: "var(--azul)" }}>
-                  {a.llamada_a_la_accion}
-                </div>
-                <p className="text-[13px] italic mt-1" style={{ color: "var(--texto-2)" }}>
-                  {a.por_que_funciona}
-                </p>
+              <div className="text-[13px] font-bold" style={{ color: "var(--azul)" }}>
+                {a.llamada_a_la_accion}
               </div>
+              <p
+                className="text-[13px] italic mt-3 pt-3 border-t"
+                style={{ color: "var(--texto-2)", borderColor: "var(--borde)" }}
+              >
+                <span className="not-italic font-semibold">Por qué funciona: </span>
+                {a.por_que_funciona}
+              </p>
             </>
           )}
           {compact && (
-            <div className="text-[13px] font-bold mt-auto" style={{ color: "var(--azul)" }}>
+            <div className="text-[13px] font-bold" style={{ color: "var(--azul)" }}>
               {a.llamada_a_la_accion}
             </div>
           )}

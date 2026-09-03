@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/Layout";
 import { api } from "../lib/api";
@@ -6,10 +6,14 @@ import { Home, Building2, Check } from "lucide-react";
 
 export default function TipoCampana() {
   const [cargando, setCargando] = useState(false);
+  // El estado de React no se actualiza a tiempo entre dos clics rápidos, así que
+  // la guarda real es una referencia: un clic, una campaña.
+  const enCurso = useRef(false);
   const navigate = useNavigate();
 
   const elegirCaptacion = async () => {
-    if (cargando) return;
+    if (enCurso.current) return;
+    enCurso.current = true;
     setCargando(true);
     try {
       const { data: campana } = await api.post("/campanas", { tipo: "captacion" });
@@ -20,19 +24,20 @@ export default function TipoCampana() {
         navigate(`/asistente/${campana.id}`);
       }
     } catch {
+      enCurso.current = false;
       setCargando(false);
     }
   };
 
   return (
     <Layout>
-      <div className="antetitulo mb-4">PASO 1 DE 3</div>
+      <div className="antetitulo mb-4">ANTES DE EMPEZAR</div>
       <h1 className="font-sora font-extrabold text-[40px] leading-tight mb-3">¿Qué quieres conseguir?</h1>
       <p className="text-[18px] mb-10" style={{ color: "var(--texto-2)" }}>
         Elige el tipo de campaña. Ahora mismo trabajamos la captación de propiedades.
       </p>
 
-      <div className="grid grid-cols-2 gap-6 max-w-[880px]">
+      <div className="grid gap-6 md:grid-cols-2 max-w-[880px]">
         {/* Captación */}
         <button
           onClick={elegirCaptacion}
@@ -69,8 +74,9 @@ export default function TipoCampana() {
         {/* Venta (deshabilitada) */}
         <div
           data-testid="tipo-venta-deshabilitado"
-          className="text-left rounded-[12px] border p-8 relative"
+          className="text-left rounded-[12px] border p-8 relative cursor-not-allowed"
           style={{ borderColor: "var(--borde)", background: "var(--suave)", opacity: 0.7 }}
+          aria-disabled="true"
         >
           <span
             className="absolute top-6 right-6 text-[12px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"

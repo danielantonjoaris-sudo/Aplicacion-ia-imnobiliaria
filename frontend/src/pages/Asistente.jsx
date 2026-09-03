@@ -7,7 +7,7 @@ import { Resultado } from "../components/resultados/Renderers";
 import { Fuentes } from "../components/Fuentes";
 import { Modal } from "../components/Modal";
 import { api, ORDEN, ETIQUETA_ESPECIALISTA } from "../lib/api";
-import { Check, RefreshCw, Maximize2, AlertTriangle, Sparkles, FilePlus2 } from "lucide-react";
+import { Check, RefreshCw, Maximize2, AlertTriangle, Sparkles, FilePlus2, Menu } from "lucide-react";
 
 const PUEDE_REUTILIZAR = { cliente_ideal: true, oferta: true, anuncios: false, landing: false };
 
@@ -31,6 +31,7 @@ export default function Asistente() {
   const [errorMsg, setErrorMsg] = useState("");
   const [verCompleto, setVerCompleto] = useState(false);
   const [aprobando, setAprobando] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const paso = campana?.paso_actual || 1;
   const especialista = ORDEN[paso - 1];
@@ -130,12 +131,12 @@ export default function Asistente() {
   // ---- Columna izquierda: progreso ----
   const ColumnaProgreso = () => (
     <div
-      className="w-[300px] shrink-0 border-r px-7 py-8 flex flex-col"
+      className="lg:w-[300px] shrink-0 border-b lg:border-b-0 lg:border-r px-5 py-4 lg:px-7 lg:py-8 flex flex-col overflow-x-auto"
       style={{ background: "var(--suave)", borderColor: "var(--borde)" }}
     >
-      <div className="antetitulo mb-1">TU CAMPAÑA</div>
-      <h2 className="font-sora text-[20px] font-bold mb-8">Los especialistas</h2>
-      <div className="space-y-2">
+      <div className="antetitulo mb-1 hidden lg:block">TU CAMPAÑA</div>
+      <h2 className="font-sora text-[20px] font-bold mb-8 hidden lg:block">Los especialistas</h2>
+      <div className="flex gap-2 lg:block lg:space-y-2">
         {ORDEN.map((esp, i) => {
           const num = i + 1;
           let estado = "pendiente";
@@ -146,7 +147,7 @@ export default function Asistente() {
             <div
               key={esp}
               data-testid={`progreso-${esp}-${estado}`}
-              className="flex items-center gap-3 px-3 py-3 rounded-[8px] transition-colors"
+              className="flex items-center gap-3 px-3 py-3 rounded-[8px] transition-colors shrink-0"
               style={{ background: activo ? "var(--acento)" : "transparent" }}
             >
               <div
@@ -161,7 +162,7 @@ export default function Asistente() {
               >
                 {estado === "terminado" ? <Check size={17} /> : num}
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <div
                   className="text-[16px]"
                   style={{
@@ -191,13 +192,40 @@ export default function Asistente() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="ml-[264px] flex-1 flex overflow-hidden">
+    <div className="flex min-h-screen lg:h-screen lg:overflow-hidden">
+      <Sidebar abierto={menuAbierto} onCerrar={() => setMenuAbierto(false)} />
+      {menuAbierto && (
+        <div
+          className="fixed inset-0 z-20 lg:hidden"
+          style={{ background: "rgba(19,32,50,0.45)" }}
+          onClick={() => setMenuAbierto(false)}
+          aria-hidden="true"
+        />
+      )}
+      <div className="flex-1 min-w-0 lg:ml-[264px] flex flex-col lg:flex-row lg:overflow-hidden">
+        <header
+          className="lg:hidden sticky top-0 z-10 flex items-center gap-3 px-4 py-3 border-b"
+          style={{ background: "var(--pagina)", borderColor: "var(--borde)" }}
+        >
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(true)}
+            aria-label="Abrir el menú"
+            data-testid="abrir-menu"
+            className="flex items-center justify-center rounded-[8px] border"
+            style={{ width: 44, height: 44, borderColor: "var(--borde)" }}
+          >
+            <Menu size={22} />
+          </button>
+          <span className="font-sora text-[18px] font-extrabold">
+            Inmo<span style={{ color: "var(--dorado)" }}>Matic</span>
+          </span>
+        </header>
+
         <ColumnaProgreso />
 
         {/* Columna derecha */}
-        <div className="flex-1 px-12 py-10 overflow-hidden flex flex-col" data-testid="asistente-panel">
+        <div className="flex-1 min-w-0 px-5 py-7 sm:px-8 lg:px-12 lg:py-10 lg:overflow-auto flex flex-col" data-testid="asistente-panel">
           {vista === "carga" && (
             <div className="text-[17px]" style={{ color: "var(--texto-2)" }}>Cargando...</div>
           )}
@@ -264,8 +292,8 @@ export default function Asistente() {
           )}
 
           {vista === "result" && resultActual && (
-            <div className="flex flex-col h-full aparecer">
-              <div className="flex items-start justify-between mb-5">
+            <div className="flex flex-col aparecer">
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
                 <div>
                   <div className="antetitulo mb-1">ESPECIALISTA EN {ETIQUETA_ESPECIALISTA[especialista].toUpperCase()}</div>
                   <h2 className="font-sora text-[30px] font-bold leading-tight" data-testid="resultado-titulo">
@@ -283,7 +311,7 @@ export default function Asistente() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-hidden" data-testid="resultado-contenido">
+              <div className="flex-1 min-w-0" data-testid="resultado-contenido">
                 <Resultado especialista={especialista} data={resultActual.contenido} resultadoId={resultActual.id} compact />
               </div>
 

@@ -35,6 +35,10 @@ class MarcaIn(BaseModel):
     marca: dict
 
 
+class RenombrarIn(BaseModel):
+    nombre: str
+
+
 class CampanaIn(BaseModel):
     tipo: str
 
@@ -116,6 +120,31 @@ async def crear_campana(datos: CampanaIn):
     }
     res = await db.campanas.insert_one(doc)
     return limpiar(await db.campanas.find_one({"_id": res.inserted_id}))
+
+
+@api.patch("/campanas/{campana_id}")
+async def renombrar_campana(campana_id: str, datos: RenombrarIn):
+    """Renombrar. Sin esto, diez campañas se llaman todas 'Captación en Elche'."""
+    nombre = datos.nombre.strip()[:120]
+    if not nombre:
+        raise HTTPException(400, "El nombre no puede estar vacío")
+    r = await db.campanas.update_one({"_id": oid(campana_id)}, {"$set": {"nombre": nombre}})
+    if r.matched_count == 0:
+        raise HTTPException(404, "Campaña no encontrada")
+    return limpiar(await db.campanas.find_one({"_id": oid(campana_id)}))
+
+
+@api.delete("/campanas/{campana_id}")
+async def borrar_campana(campana_id: str):
+    """Borra la campaña y todo lo que cuelga de ella. Los borradores abandonados
+    se quedaban para siempre en la lista, etiquetados 'En proceso'."""
+    campana = await db.campanas.find_one({"_id": oid(campana_id)})
+    if not campana:
+        raise HTTPException(404, "Campaña no encontrada")
+    await db.resultados.delete_many({"campana_id": oid(campana_id)})
+    await db.respuestas.delete_many({"campana_id": oid(campana_id)})
+    await db.campanas.delete_one({"_id": oid(campana_id)})
+    return {"ok": True}
 
 
 # ------------------- Resultados de una campaña -------------------

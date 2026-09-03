@@ -5,7 +5,10 @@
 
 :root {
   --azul: #0B4DA8;
-  --dorado: #D8A942;
+  /* El dorado claro daba 2,17:1 sobre blanco: ilegible y usado en toda la
+     arquitectura de informacion. Este da 5,37:1. El claro queda para adornos. */
+  --dorado: #8A6410;
+  --dorado-claro: #D8A942;
   --texto: #132032;
   --texto-2: #5E6A7B;
   --borde: #D8DFE8;
@@ -22,6 +25,7 @@
 
 body {
   margin: 0;
+  overflow-x: clip; /* red de seguridad contra desbordes horizontales */
   font-family: 'Manrope', sans-serif;
   color: var(--texto);
   background: var(--pagina);
@@ -64,3 +68,44 @@ body {
   50% { box-shadow: 0 0 0 6px rgba(11,77,168,0); }
 }
 .pulso { animation: pulso-azul 1.6s ease-in-out infinite; }
+
+/* ---------- Documento largo: indice y bloques ---------- */
+.indice-doc { position: sticky; top: 24px; align-self: start; }
+.indice-doc a {
+  display: block; padding: 7px 12px; border-left: 2px solid var(--borde);
+  color: var(--texto-2); font-size: 14.5px; text-decoration: none; line-height: 1.35;
+}
+.indice-doc a:hover { color: var(--texto); background: var(--suave); }
+.indice-doc a.activo {
+  color: var(--azul); border-left-color: var(--azul); font-weight: 600; background: var(--acento);
+}
+
+/* Huecos que el agente deja marcados para que la agencia los rellene.
+   Van con su propio elemento y aviso: nunca como texto plano dentro del parrafo. */
+.hueco {
+  background: #FDECC8; color: #6B4E0C; border-bottom: 2px solid #E0B94A;
+  padding: 0 4px; border-radius: 3px; font-weight: 600; font-size: 0.95em;
+}
+
+/* Se salta el indice y va al contenido; visible solo al tabular. */
+.saltar {
+  position: absolute; left: -9999px; top: 0; z-index: 60;
+  background: var(--azul); color: #fff; padding: 12px 18px;
+  border-radius: 0 0 8px 0; font-weight: 600;
+}
+.saltar:focus { left: 0; }
+
+/* ---------- Movil ---------- */
+@media (max-width: 1023px) {
+  body { font-size: 16px; }
+  .lateral-movil {
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 40px rgba(19, 32, 50, 0.18);
+  }
+  .lateral-movil.abierto { transform: translateX(0); }
+  .indice-doc { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}

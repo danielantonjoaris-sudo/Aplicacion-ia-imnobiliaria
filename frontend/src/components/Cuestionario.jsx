@@ -53,19 +53,30 @@ export function Cuestionario({ especialista, onSubmit }) {
 
       <div className="space-y-7">
         {preguntas.map((p) => (
-          <div key={p.id}>
-            <label className="block font-semibold text-[17px] mb-1">
+          /* Cada pregunta es un grupo con su leyenda: antes eran botones sueltos
+             y un lector de pantalla recorría diecisiete opciones sin llegar a oír
+             nunca a qué pregunta pertenecían. */
+          <fieldset key={p.id} className="border-0 p-0 m-0">
+            <legend className="block font-semibold text-[17px] mb-1 p-0">
               {p.texto}
-              {p.opcional && <span className="text-[14px] font-normal ml-2" style={{ color: "var(--texto-2)" }}>(opcional)</span>}
-            </label>
+              {p.opcional ? (
+                <span className="text-[14px] font-normal ml-2" style={{ color: "var(--texto-2)" }}>(opcional)</span>
+              ) : (
+                <span className="text-[14px] font-normal ml-2" style={{ color: "var(--texto-2)" }}>(obligatoria)</span>
+              )}
+            </legend>
             {p.tipo === "multi" && (
               <p className="text-[14px] mb-3" style={{ color: "var(--texto-2)" }}>Puedes elegir varias.</p>
+            )}
+            {p.tipo === "unica" && (
+              <p className="text-[14px] mb-3" style={{ color: "var(--texto-2)" }}>Elige una.</p>
             )}
 
             {p.tipo === "texto" ? (
               <textarea
                 data-testid={`campo-${p.id}`}
                 rows={3}
+                aria-label={p.texto}
                 value={resp[p.id] || ""}
                 onChange={(e) => setSingle(p.id, e.target.value)}
                 placeholder={p.placeholder}
@@ -73,42 +84,60 @@ export function Cuestionario({ especialista, onSubmit }) {
                 style={{ borderColor: "var(--borde-campo)" }}
               />
             ) : (
-              <div className="flex flex-wrap gap-2.5 mt-1">
-                {p.opciones.map((op) => {
-                  const activo = p.tipo === "multi" ? (resp[p.id] || []).includes(op) : resp[p.id] === op;
-                  return (
-                    <button
-                      key={op}
-                      data-testid={`opcion-${p.id}-${op}`}
-                      onClick={() => (p.tipo === "multi" ? toggleMulti(p.id, op) : setSingle(p.id, op))}
-                      className="rounded-full border px-4 py-2.5 text-[15px] font-medium transition-colors"
-                      style={chip(activo)}
-                    >
-                      {op}
-                    </button>
-                  );
-                })}
+              <>
+                <div className="flex flex-wrap gap-2.5 mt-1">
+                  {p.opciones.map((op) => {
+                    const activo = p.tipo === "multi" ? (resp[p.id] || []).includes(op) : resp[p.id] === op;
+                    return (
+                      <button
+                        key={op}
+                        type="button"
+                        aria-pressed={activo}
+                        data-testid={`opcion-${p.id}-${op}`}
+                        onClick={() => (p.tipo === "multi" ? toggleMulti(p.id, op) : setSingle(p.id, op))}
+                        className="inline-flex items-center gap-2 rounded-full border px-4 text-[15px] font-medium transition-colors"
+                        style={{ ...chip(activo), minHeight: 44 }}
+                      >
+                        {activo && <Check size={15} />}
+                        {op}
+                      </button>
+                    );
+                  })}
+                </div>
                 {p.otra && (
-                  <input
-                    data-testid={`otra-${p.id}`}
-                    value={otra[p.id] || ""}
-                    onChange={(e) => setOtra((o) => ({ ...o, [p.id]: e.target.value }))}
-                    placeholder="Otra cosa..."
-                    className="rounded-full border px-4 py-2.5 text-[15px] outline-none focus:border-[#0B4DA8]"
-                    style={{ borderColor: "var(--borde-campo)", minWidth: "180px" }}
-                  />
+                  /* El campo libre iba dentro de la fila de opciones y parecía una
+                     opción más. Ahora va debajo, con su etiqueta. */
+                  <div className="mt-3">
+                    <label className="block text-[14px] mb-1" style={{ color: "var(--texto-2)" }} htmlFor={`otra-${p.id}`}>
+                      ¿Otra cosa? Escríbela
+                    </label>
+                    <input
+                      id={`otra-${p.id}`}
+                      data-testid={`otra-${p.id}`}
+                      value={otra[p.id] || ""}
+                      onChange={(e) => setOtra((o) => ({ ...o, [p.id]: e.target.value }))}
+                      placeholder="Lo que no esté en la lista"
+                      className="w-full max-w-[420px] rounded-[8px] border px-4 py-2.5 text-[15px] outline-none focus:border-[#0B4DA8]"
+                      style={{ borderColor: "var(--borde-campo)", minHeight: 44 }}
+                    />
+                  </div>
                 )}
-              </div>
+              </>
             )}
-          </div>
+          </fieldset>
         ))}
       </div>
 
+      {!completo && (
+        <p className="text-[14px] mt-8 mb-0" style={{ color: "var(--texto-2)" }} data-testid="aviso-incompleto">
+          Contesta las preguntas obligatorias para continuar.
+        </p>
+      )}
       <button
         onClick={enviar}
         disabled={!completo}
         data-testid="enviar-cuestionario"
-        className="inline-flex items-center gap-2.5 text-white text-[17px] font-semibold px-7 py-4 rounded-[8px] mt-9 transition-transform hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+        className="inline-flex items-center gap-2.5 text-white text-[17px] font-semibold px-7 py-4 rounded-[8px] mt-4 transition-transform hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
         style={{ background: "var(--azul)" }}
       >
         <Check size={20} /> Enviar al especialista <ArrowRight size={19} />

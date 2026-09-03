@@ -1,33 +1,31 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import { ListaCampanas } from "../components/ListaCampanas";
 import { api } from "../lib/api";
 import { Plus } from "lucide-react";
 
-const ESTADO = { en_proceso: "En proceso", completada: "Completada" };
-
-function fecha(iso) {
-  try {
-    return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
-  } catch {
-    return "";
-  }
-}
-
 export default function Campanas() {
   const [campanas, setCampanas] = useState([]);
+  const [cargado, setCargado] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    api.get("/campanas").then((r) => setCampanas(r.data)).catch(() => {});
+  const cargar = useCallback(() => {
+    api
+      .get("/campanas")
+      .then((r) => setCampanas(r.data))
+      .catch(() => {})
+      .finally(() => setCargado(true));
   }, []);
+
+  useEffect(cargar, [cargar]);
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <div className="antetitulo mb-2">TUS CAMPAÑAS</div>
-          <h1 className="font-sora font-extrabold text-[40px] leading-tight">Campañas</h1>
+          <h1 className="font-sora font-extrabold text-[30px] sm:text-[40px] leading-tight">Campañas</h1>
         </div>
         <button
           onClick={() => navigate("/nueva/tipo")}
@@ -39,34 +37,30 @@ export default function Campanas() {
         </button>
       </div>
 
-      {campanas.length === 0 ? (
-        <p className="text-[17px]" style={{ color: "var(--texto-2)" }}>Todavía no has creado ninguna campaña.</p>
-      ) : (
-        <div className="space-y-3" data-testid="lista-campanas">
-          {campanas.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => navigate(c.estado === "completada" ? `/campana/${c.id}` : `/asistente/${c.id}`)}
-              data-testid={`campana-item-${c.id}`}
-              className="w-full text-left flex items-center justify-between rounded-[12px] border px-6 py-5 bg-white transition-transform hover:-translate-y-0.5"
-              style={{ borderColor: "var(--borde)", boxShadow: "0 4px 12px rgba(19,32,50,0.05)" }}
-            >
-              <div>
-                <div className="font-sora font-semibold text-[18px]">{c.nombre}</div>
-                <div className="text-[14px]" style={{ color: "var(--texto-2)" }}>{fecha(c.creado_en)}</div>
-              </div>
-              <span
-                className="text-[13px] font-semibold px-3 py-1.5 rounded-full"
-                style={{
-                  background: c.estado === "completada" ? "rgba(44,150,93,0.12)" : "var(--acento)",
-                  color: c.estado === "completada" ? "var(--verde)" : "var(--azul)",
-                }}
-              >
-                {ESTADO[c.estado] || c.estado}
-              </span>
-            </button>
-          ))}
+      {/* Mientras carga no se afirma que no hay ninguna: esa frase aparecía
+          durante un instante en cada navegación y era falsa. */}
+      {!cargado ? (
+        <p className="text-[17px]" style={{ color: "var(--texto-2)" }}>Cargando...</p>
+      ) : campanas.length === 0 ? (
+        <div
+          className="rounded-[12px] border p-8 text-center"
+          style={{ borderColor: "var(--borde)", background: "var(--suave)" }}
+        >
+          <h2 className="font-sora text-[20px] font-bold mb-2">Todavía no hay ninguna campaña</h2>
+          <p className="text-[16px] mb-5" style={{ color: "var(--texto-2)" }}>
+            Una campaña son cuatro piezas encadenadas: a quién captas, qué le ofreces, los
+            anuncios y la página que los recibe. Se tarda unos minutos.
+          </p>
+          <button
+            onClick={() => navigate("/nueva/tipo")}
+            className="inline-flex items-center gap-2 text-white font-semibold px-5 py-3 rounded-[8px]"
+            style={{ background: "var(--azul)" }}
+          >
+            <Plus size={18} /> Crear la primera
+          </button>
         </div>
+      ) : (
+        <ListaCampanas campanas={campanas} onCambio={cargar} />
       )}
     </Layout>
   );
