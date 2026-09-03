@@ -1,0 +1,37 @@
+{
+  "summary": "Ronda 1 de testing de InmoMatic. Backend: 10/11 tests pasan (91%). Todos los flujos funcionan (agencias, campañas, cliente_ideal v1+v2 rehacer, aprobación, oferta, landing, reutilizar guardado, admin conocimiento y prompts). Semillas (4 prompts + 12 fragmentos) correctas. FALLO CRÍTICO: la generación del especialista `anuncios` supera el timeout del ingress Cloudflare (~60s) y devuelve 502 antes de que el LLM termine; esto rompe el paso 3 tanto en tests como en el frontend. Frontend: home, /nueva/tipo (captación activa, venta deshabilitada), /asistente/:id (sidebar con 4 estados + vista reuse), /campanas, /campana/:id (secciones + landing-preview + crear-otra-campana), /conocimiento y /prompts renderizan correctamente con todos los data-testid, y no se ve markdown en bruto (## ni **) en ninguna pantalla.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/especialistas/anuncios/{campana_id}", "issue": "La llamada al LLM para generar 5 anuncios tarda >60s y el ingress Cloudflare responde 502 Bad Gateway antes de que el backend termine. Reproducido dos veces (60.2s -> 502). Bloquea el paso 3 en el frontend. Sugerencia: dividir en 5 llamadas paralelas de un solo anuncio (asyncio.gather), reducir longitud pedida, o convertir a job asíncrono con polling.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Asistente paso 3 (anuncios)", "issue": "Se generará 502 al enviar el cuestionario de anuncios porque el backend supera el timeout del ingress (~60s). No probado en UI end-to-end para no forzar otro timeout, pero confirmado a nivel API.", "affected_selectors": ["enviar-cuestionario", "estado-trabajando", "resultado-contenido"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_inmomatic.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "CRÍTICO: Reducir la latencia del especialista `anuncios` por debajo de 60s. Opción recomendada: generar los 5 anuncios en paralelo con asyncio.gather (5 llamadas más cortas al LLM en lugar de una gigante), o abrir un endpoint asíncrono con job_id + polling desde el frontend.",
+    "Considerar aumentar el timeout del proxy si es posible, pero la solución robusta es dividir la generación.",
+    "Revisar mensajes de error en el frontend cuando el backend devuelve 502 para no dejar al usuario colgado en 'estado-trabajando'."
+  ],
+  "critical_code_review_comments": [
+    "server.py: `@app.on_event('startup')` está deprecado en FastAPI moderno; migrar a `lifespan` en algún momento.",
+    "specialists.py: el prompt de anuncios pide 5 objetos con 5 sub-claves cada uno en un único JSON grande; esto es exactamente lo que dispara el timeout del ingress. Es la causa raíz del 502.",
+    "server.py `usar_guardado`: no valida que `especialista` sea de PASO_POR_ESPECIALISTA antes de acceder al diccionario (podría KeyError si un id apunta a algo inesperado).",
+    "server.py: no hay endpoint DELETE para conocimiento; la spec no lo pedía, ok.",
+    "retrieval.py: la búsqueda por texto es correcta como fallback declarado, pero convendría documentarlo en un README."
+  ],
+  "updated_files": ["/app/backend/tests/test_inmomatic.py"],
+  "success_rate": {"backend": "91% (10/11)", "frontend": "100% de las pantallas testeadas (asistente end-to-end no probado por el bug de anuncios)"},
+  "test_credentials": "N/A - la app no tiene login.",
+  "seed_data_creation": "Se creó agencia TEST_Fincas QA (Chamberí) y varias campañas de test. Un fragmento TEST_Titulo Editado en base_conocimiento. El prompt de cliente_ideal se restauró a su contenido original tras el test.",
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "El backend está OK en 10/11 endpoints. El único bloqueante es el timeout de anuncios (60s ingress). Cuando el main agent lo divida en llamadas paralelas o cambie a un patrón asíncrono, hay que: (1) volver a ejecutar pytest /app/backend/tests/test_inmomatic.py::test_anuncios (que ahora recorre todo el flujo hasta anuncios), y (2) probar el flujo completo en la UI: /asistente -> cuestionario cliente_ideal -> aprobar -> oferta -> aprobar -> anuncios -> aprobar -> landing -> aprobar -> ver /campana/:id con las 5 tarjetas de anuncio y la landing renderizada. Los data-testid del frontend están bien nombrados y son fiables.",
+  "rca of the issue": "RCA: `POST /api/especialistas/anuncios/{id}` llama a `ejecutar_especialista` que a su vez llama a `generar_json` (Claude Sonnet 4.6 vía Emergent Universal Key). El prompt pide un JSON grande con 5 anuncios completos (cada uno con angulo, gancho, cuerpo, llamada_a_la_accion, por_que_funciona), lo que supone ~1500-2500 tokens de salida. Con el modelo Claude Sonnet 4.6 esto tarda >60s. El ingress Cloudflare de emergentagent.com corta la conexión a los ~60s y devuelve 502 sin llegar al backend. Reproducción: `curl -X POST .../api/especialistas/anuncios/{cid} -d '{...}'` -> 502 en 60s. Mitigación recomendada: en `specialists.py`, para 'anuncios' hacer 5 `generar_json` en paralelo con `asyncio.gather` (cada uno pide UN anuncio) y combinar; o alternativamente exponer `POST /api/especialistas/{esp}/{id}` como job asíncrono y `GET /api/jobs/{id}` con polling desde `Trabajando.jsx`."
+}

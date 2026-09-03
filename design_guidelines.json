@@ -1,0 +1,157 @@
+{
+  "project_info": {
+    "name": "InmoMatic",
+    "target_audience": "Agente inmobiliario español, poca cultura digital, sin conocimientos de marketing. Interfaz ultra sencilla, clara y obvia.",
+    "demo_context": "Proyectado en directo ante 50 personas en sala iluminada. Alta legibilidad a distancia (tipografía grande, alto contraste, jerarquía visual impecable).",
+    "language": "es-ES (Español de España)",
+    "app_type": "saas_app"
+  },
+  "typography": {
+    "font_families": {
+      "headings": "'Sora', sans-serif (Google Font)",
+      "interface_body": "'Manrope', sans-serif (Google Font)"
+    },
+    "font_sizes": {
+      "section_title": "40px (leading-none / leading-tight, font-bold Sora)",
+      "specialist_name": "28px (font-semibold Sora)",
+      "body": "17px (font-normal Manrope, text-[#132032])",
+      "secondary": "15px (font-normal Manrope, text-[#5E6A7B])",
+      "overline_antetitulo": "13px - 14px (font-bold Sora/Manrope, text-[#D8A942], tracking-[0.2em], uppercase)"
+    },
+    "rules": [
+      "NO usar Inter para los titulares. Usar Sora para títulos y Manrope para texto/formularios.",
+      "Antetítulos SIEMPRE en mayúsculas, color dorado #D8A942, con espaciado amplio de letras arriba del título.",
+      "Titulares de sección a 40px para garantizar proyección legible desde lejos."
+    ]
+  },
+  "colors": {
+    "primary_blue": "#0B4DA8",
+    "gold_accent": "#D8A942",
+    "text_primary": "#132032",
+    "text_secondary": "#5E6A7B",
+    "borders_lines": "#D8DFE8",
+    "field_borders": "#CFD8E5",
+    "bg_page": "#FFFFFF",
+    "bg_sidebar": "#F5F9FE",
+    "bg_soft_blocks": "#F2F5FB",
+    "bg_accent_soft": "#E2F0FF",
+    "success_green": "#2C965D",
+    "error_red": "#D73337",
+    "restrictions": [
+      "El dorado #D8A942 se usa ÚNICAMENTE para la marca, antetítulos en mayúsculas y alguna cifra destacada. NUNCA en botones ni superficies grandes.",
+      "Fondo claro SIEMPRE. NUNCA modo oscuro.",
+      "SIN degradados de morado a azul.",
+      "SIN otros colores que no pertenezcan a esta paleta cerrada."
+    ]
+  },
+  "spacing_and_borders": {
+    "spacing_scale": "Múltiples de 8px (p-2=8px, p-4=16px, p-6=24px, p-8=32px, p-12=48px). Espaciado generoso.",
+    "border_radius": {
+      "cards": "12px (rounded-[12px])",
+      "fields_and_buttons": "8px (rounded-[8px])"
+    },
+    "border_width": "1px (border border-[#D8DFE8] o border-[#CFD8E5])",
+    "shadows": "Sombras muy sutiles y únicamente verticales: shadow-[0_4px_12px_rgba(19,32,50,0.05)]. Prohibidos halos de color o resplandores."
+  },
+  "layout_architecture": {
+    "sidebar": "Barra lateral fija a la izquierda (ancho ~260px) presente en todas las pantallas. Fondo #F5F9FE, borde derecho #D8DFE8. Marca InmoMatic arriba con detalle dorado, nav links (Inicio, Campañas), botón azul + Nueva campaña, y al fondo nombre de agencia + 'Salir'.",
+    "main_container": "Contenido a la derecha con ancho máximo cómodo sin llenar toda la pantalla, centrado óptico en su área de trabajo.",
+    "screen_4_assistant_no_scroll": "Pantalla principal del Asistente con 2 columnas fijas. Columna izquierda ~300px (progreso de 4 especialistas). Columna derecha ancha que DEBE caber en 1920x1080 SIN SCROLL vertical. Usar modal/drawer 'Ver completo' para desplegar contenido extenso."
+  },
+  "screens": {
+    "screen_1_home": {
+      "path": "/",
+      "components": [
+        "Antetítulo dorado en mayúsculas: 'PLATAFORMA INTELIGENTE PARA INMOBILIARIAS'",
+        "Titular 40px: 'Tus campañas de marketing automatizadas por especialistas de IA'",
+        "Botón primario azul #0B4DA8: 'Crear campaña'",
+        "Listado de campañas recientes con tarjetas (con estado, tipo, fecha y acciones)"
+      ]
+    },
+    "screen_2_campaign_type": {
+      "path": "/nueva-campana/tipo",
+      "components": [
+        "Antetítulo dorado: 'PASO 1 DE 3'",
+        "Titular 40px: 'Selecciona el tipo de campaña'",
+        "Dos tarjetas grandes (rounded-[12px]):",
+        "1. Captación ACTIVA (Habilitada, borde azul al seleccionar, badge 'Recomendado')",
+        "2. Venta de inmueble (DESHABILITADA, con etiqueta visible 'Próximamente' en fondo gris/soft)"
+      ]
+    },
+    "screen_3_agency_info": {
+      "path": "/nueva-campana/datos-inmobiliaria",
+      "components": [
+        "Antetítulo dorado: 'PASO 2 DE 3'",
+        "Titular 40px: 'Datos de tu inmobiliaria'",
+        "Formulario sencillo con 3 preguntas claras (campos con borde #CFD8E5, radius 8px, padding cómodo):",
+        "1. ¿Nombre de tu agencia y zona/ciudad principal?",
+        "2. ¿Cuál es tu especialidad o tipo de inmuebles estrella?",
+        "3. ¿Qué te diferencia de la competencia local?",
+        "Botón azul 'Comenzar con los Especialistas'"
+      ]
+    },
+    "screen_4_assistant": {
+      "path": "/asistente/:id",
+      "components": [
+        "Estructura fija 2 columnas (100vh h-screen sin scroll global):",
+        "Columna izquierda (~300px): Lista de progreso con los 4 Especialistas:",
+        "  - 1. Cliente Ideal (Comprador/Vendedor objetivo)",
+        "  - 2. Propuesta de Oferta (Estrategia e incentivo)",
+        "  - 3. Anuncios Meta / Google (5 variaciones)",
+        "  - 4. Landing Page de Captación (Estructura y copys)",
+        "Estados visuales claros: Pendiente (gris), En curso (azul activo con spinner), Terminado (verde #2C965D con check).",
+        "Columna derecha (Ancha, max-height 100vh): Muestra SOLO el tramo/paso actual.",
+        "Animación 'Trabajando': Barra fina azul de progreso arriba, texto animado que cambia cada 2-3s ('Analizando mercado local...', 'Identificando motivaciones del comprador...', etc.).",
+        "Cuestionarios interactivos de opción múltiple por tramo.",
+        "Presentación de resultados por CAMPOS estructurados con etiquetas y jerarquía visual (NUNCA markdown crudo):",
+        "  - Cliente Ideal con citas entrecomilladas en bloques #F2F5FB",
+        "  - 5 Anuncios presentados como 5 tarjetas individuales con copys y ganchos",
+        "  - Citas de fuentes / fundamentación bajo cada resultado",
+        "Botón 'Ver completo' para abrir modal/panel sin forzar scroll en la pantalla principal",
+        "Botones de acción: 'Aprobar y Continuar' (Azul) y 'Rehacer / Ajustar' (Borde gris/azul)"
+      ]
+    },
+    "screen_5_final_campaign": {
+      "path": "/campana/:id",
+      "components": [
+        "Vista unificada de la campaña completa:",
+        "Pestañas o navegación por secciones (Cliente Ideal, Oferta, Anuncios, Landing Page)",
+        "Previsualizador interactivo de Landing Page renderizada en directo (con vista previa responsive desktop/mobile y opción de publicar/exportar)",
+        "Los 5 anuncios organizados en grid con opción de copiar texto y descargar creatividades"
+      ]
+    },
+    "screen_admin_knowledge": {
+      "path": "/conocimiento",
+      "components": [
+        "Panel de administración de base de conocimiento (RAG):",
+        "Carga de documentos PDF/TXT de la agencia, historial de ventas locales, guías de argumentario",
+        "Listado de fuentes de conocimiento activas con estado de indexación"
+      ]
+    },
+    "screen_admin_prompts": {
+      "path": "/prompts",
+      "components": [
+        "Configuración de prompts del sistema para los 4 especialistas IA:",
+        "Editor estructurado por especialista con variables dinámicas, temperatura y pruebas rápidas"
+      ]
+    }
+  },
+  "image_urls": {
+    "hero_house_1": "https://images.unsplash.com/photo-1613977257363-707ba9348227?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwxfHxzcGFuaXNoJTIwcmVhbCUyMGVzdGF0ZSUyMGFnZW50JTIwbHV4dXJ5JTIwaG91c2UlMjBwcm9wZXJ0eXxlbnwwfHx8fDE3ODg0MzA2MTd8MA&ixlib=rb-4.1.0&q=85",
+    "hero_house_2": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwzfHxzcGFuaXNoJTIwcmVhbCUyMGVzdGF0ZSUyMGFnZW50JTIwbHV4dXJ5JTIwaG91c2UlMjBwcm9wZXJ0eXxlbnwwfHx8fDE3ODg0MzA2MTd8MA&ixlib=rb-4.1.0&q=85",
+    "agent_portrait": "https://images.pexels.com/photos/8469936/pexels-photo-8469936.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "spain_villa": "https://images.pexels.com/photos/20427297/pexels-photo-20427297.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "testing_and_qa": {
+    "data_testid_convention": "Usar data-testid en kebab-case para todos los elementos interactivos y claves de información. Ejemplos: data-testid='sidebar-new-campaign-button', data-testid='campaign-type-active-card', data-testid='assistant-specialist-step-1', data-testid='approve-step-button', data-testid='view-full-result-button'."
+  },
+  "instructions_to_main_agent": [
+    "1. Configurar index.html o index.css para cargar Google Fonts 'Sora' y 'Manrope'.",
+    "2. Configurar las variables CSS o colores de Tailwind exactamente con los valores hexadecimales requeridos (#0B4DA8, #D8A942, #132032, #5E6A7B, #D8DFE8, #CFD8E5, #FFFFFF, #F5F9FE, #F2F5FB, #E2F0FF, #2C965D, #D73337).",
+    "3. Asegurar que la pantalla de El Asistente (/asistente/:id) no tenga scroll vertical en la columna derecha para resolución 1920x1080. Usar 'Ver completo' con un dialogo/modal de Shadcn para mostrar detalles largos.",
+    "4. Toda la app en español de España perfecto y profesional pero accesible.",
+    "5. NO usar emojis como iconos. Usar componentes de Lucide Icons (lucide-react).",
+    "6. Todos los campos de formulario, tarjetas y botones deben incluir data-testid para automatización.",
+    "7. Implementar las pantallas admin (/conocimiento y /prompts) accesibles desde un enlace discreto en la barra lateral o barra superior de configuración."
+  ]
+}
